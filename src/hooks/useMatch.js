@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { idbSet, idbGet, idbDelete } from '../utils/indexedDB'
 
 export const useMatch = () => {
   const [teamA, setTeamA] = useState('Team A')
