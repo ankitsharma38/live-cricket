@@ -2,6 +2,12 @@
 
 A modern, responsive cricket scoreboard built with React and Tailwind CSS. Features real-time scoring, ball-by-ball tracking, target management, and persistent data storage.
 
+## 🌐 Live Demo
+
+**[🚀 Try the Live Application](https://cricket-live-task.netlify.app/)**
+
+*Experience all features including keyboard shortcuts, data persistence, and responsive design!*
+
 ## ✨ Features
 
 ### 🎯 Core Functionality
