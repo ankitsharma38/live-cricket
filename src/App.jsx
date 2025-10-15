@@ -29,6 +29,7 @@ function App() {
               totalOvers={matchData.totalOvers}
               ballsFaced={matchData.ballsFaced}
               balls={matchData.balls}
+              target={matchData.target}
             />
 
             <ScoringButtons 
@@ -53,6 +54,7 @@ function App() {
               teamB={matchData.teamB}
               setTeamB={matchData.setTeamB}
               target={matchData.target}
+              setTarget={matchData.setTarget}
               runs={matchData.runs}
             />
           </div>

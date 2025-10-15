@@ -3,10 +3,12 @@ import { useState } from 'react'
 const MatchControls = ({ 
   handleUndo, history, setTotalOvers, totalOvers, 
   switchInnings, isMatchComplete, innings, resetMatch,
-  teamA, setTeamA, teamB, setTeamB, target, runs
+  teamA, setTeamA, teamB, setTeamB, target, runs, setTarget
 }) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [showTargetModal, setShowTargetModal] = useState(false)
+  const [targetScore, setTargetScore] = useState('')
+  const [targetOvers, setTargetOvers] = useState(6)
   return (
     <div className="bg-white rounded-lg shadow-lg mb-6">
       <div className="bg-gray-50 px-6 py-4 rounded-t-lg shadow-inner">
@@ -27,7 +29,10 @@ const MatchControls = ({
             ↶ Undo
           </button>
           <button 
-            onClick={() => setShowTargetModal(true)}
+            onClick={() => {
+              setShowTargetModal(true)
+              setTargetOvers(6)
+            }}
             className="w-full px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors"
           >
             🎯 Target
@@ -42,11 +47,11 @@ const MatchControls = ({
 
         {/* Format Selection */}
         <div className="space-y-3">
-          <h4 className="font-medium text-gray-700 mb-3">Match Format</h4>
-          <div className="grid grid-cols-2 gap-2">
+          <h4 className="font-medium text-gray-700 mb-6">Match Format</h4>
+          <div className="grid grid-cols-2 gap-2 ">
             <button 
               onClick={() => setTotalOvers(20)} 
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="px-4  py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               T20 (20)
             </button>
@@ -62,7 +67,7 @@ const MatchControls = ({
               <button 
                 key={overs}
                 onClick={() => setTotalOvers(overs)}
-                className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300 transition-colors"
               >
                 {overs}
               </button>
@@ -150,24 +155,49 @@ const MatchControls = ({
       {showTargetModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md mx-4">
-            <h3 className="text-lg font-semibold mb-4">Match Target</h3>
-            <div className="text-gray-700 mb-6">
-              {target ? (
-                <div>
-                  <p className="mb-2"><strong>Target:</strong> {target} runs</p>
-                  <p className="mb-2"><strong>Current Score:</strong> {runs} runs</p>
-                  <p><strong>Runs Needed:</strong> {Math.max(0, target - runs)} runs</p>
-                </div>
-              ) : (
-                <p>No target set. Complete first innings to set target.</p>
-              )}
+            <h3 className="text-lg font-semibold mb-4">Set Target</h3>
+            <div className="space-y-4 mb-6">
+              <input 
+                type="number" 
+                value={targetScore}
+                onChange={(e) => setTargetScore(e.target.value)}
+                placeholder="Enter target runs"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+              />
+              <input 
+                type="number" 
+                value={targetOvers}
+                onChange={(e) => setTargetOvers(e.target.value === '' ? '' : Number(e.target.value))}
+                min="1" 
+                max="50"
+                placeholder="Enter overs"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 outline-none"
+              />
             </div>
-            <div className="flex justify-end">
+            <div className="grid grid-cols-2 gap-3">
               <button 
-                onClick={() => setShowTargetModal(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                onClick={() => {
+                  setShowTargetModal(false)
+                  setTargetScore('')
+                  setTargetOvers(6)
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
               >
-                Close
+                Cancel
+              </button>
+              <button 
+                onClick={() => {
+                  if (targetScore && targetOvers) {
+                    setTarget({ score: Number(targetScore), overs: Number(targetOvers) })
+                    setShowTargetModal(false)
+                    setTargetScore('')
+                    setTargetOvers(6)
+                  }
+                }}
+                disabled={!targetScore || !targetOvers}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+              >
+                Set Target
               </button>
             </div>
           </div>
