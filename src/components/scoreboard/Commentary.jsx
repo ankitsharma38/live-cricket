@@ -1,26 +1,40 @@
 const Commentary = ({ ballByBall, balls }) => {
   const getCurrentOver = () => {
-    // Count legitimate balls (excluding wides and no balls)
-    let legitimateBalls = 0
-    let currentOverBalls = []
+    const currentOverNumber = Math.floor(balls / 6)
+    const ballsInCurrentOver = balls % 6
     
-    // Go through balls from the end to find current over
+    // If no balls in current over, return empty
+    if (ballsInCurrentOver === 0 && balls > 0) {
+      return []
+    }
+    
+    // Calculate starting index for current over
+    let legitimateBallsCount = 0
+    let startIndex = ballByBall.length
+    
+    // Find where current over starts by counting legitimate balls from the end
     for (let i = ballByBall.length - 1; i >= 0; i--) {
       const ball = ballByBall[i]
-      currentOverBalls.unshift(ball)
       
-      // Count only legitimate balls (not wides or no balls)
+      // Count legitimate balls (not wides or no balls)
       if (!ball.includes('WD') && !ball.includes('NB')) {
-        legitimateBalls++
+        legitimateBallsCount++
       }
       
-      // Stop when we have 6 legitimate balls or reach start of over
-      if (legitimateBalls >= 6) {
+      // When we've counted all balls in current over, mark start
+      if (legitimateBallsCount > ballsInCurrentOver) {
+        startIndex = i + 1
+        break
+      }
+      
+      // If we reach the beginning
+      if (i === 0) {
+        startIndex = 0
         break
       }
     }
     
-    return currentOverBalls
+    return ballByBall.slice(startIndex)
   }
 
   const getBallColor = (ball) => {
