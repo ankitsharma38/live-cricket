@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { saveMatchData, loadMatchData, clearMatchData } from '../utils/indexedDB'
 
 export const useMatch = () => {
   const [teamA, setTeamA] = useState('Team A')
@@ -43,17 +44,17 @@ export const useMatch = () => {
   }
 
   const isMatchComplete = () => {
-    return balls >= totalOvers * 6 || wickets >= 10 || (target && runs >= target)
+    return balls >= totalOvers * 6 || wickets >= 10 || (target && runs >= target.score)
   }
 
   const getMatchStatus = () => {
     if (innings === 1 && isMatchComplete()) {
       return `${currentTeam === 'A' ? teamA : teamB} innings complete`
     }
-    if (innings === 2 && target && runs >= target) {
+    if (innings === 2 && target && runs >= target.score) {
       return `${currentTeam === 'A' ? teamA : teamB} wins!`
     }
-    if (innings === 2 && isMatchComplete() && runs < target) {
+    if (innings === 2 && isMatchComplete() && target && runs < target.score) {
       return `${currentTeam === 'A' ? teamB : teamA} wins!`
     }
     return ''
@@ -123,7 +124,7 @@ export const useMatch = () => {
   const switchInnings = () => {
     if (innings === 1) {
       setFirstInningsScore({ runs, wickets, balls })
-      setTarget(runs + 1)
+      setTarget({ score: runs + 1, overs: totalOvers })
       setInnings(2)
     }
     setCurrentTeam(currentTeam === 'A' ? 'B' : 'A')
@@ -139,7 +140,7 @@ export const useMatch = () => {
     setBallByBall([])
   }
 
-  const resetMatch = () => {
+  const resetMatch = async () => {
     setRuns(0)
     setWickets(0)
     setBalls(0)
@@ -154,7 +155,52 @@ export const useMatch = () => {
     setFirstInningsScore(null)
     setCurrentTeam('A')
     setBallByBall([])
+    await clearMatchData()
   }
+
+  const saveToIndexedDB = async () => {
+    const matchState = {
+      teamA, teamB, currentTeam, runs, wickets, balls, totalOvers,
+      target, commentary, ballByBall, history, innings, firstInningsScore,
+      ballsFaced, boundaries, sixes, dotBalls
+    }
+    await saveMatchData(matchState)
+  }
+
+  const loadFromIndexedDB = async () => {
+    try {
+      const data = await loadMatchData()
+      if (data) {
+        setTeamA(data.teamA || 'Team A')
+        setTeamB(data.teamB || 'Team B')
+        setCurrentTeam(data.currentTeam || 'A')
+        setRuns(data.runs || 0)
+        setWickets(data.wickets || 0)
+        setBalls(data.balls || 0)
+        setTotalOvers(data.totalOvers || 20)
+        setTarget(data.target || null)
+        setCommentary(data.commentary || [])
+        setBallByBall(data.ballByBall || [])
+        setHistory(data.history || [])
+        setInnings(data.innings || 1)
+        setFirstInningsScore(data.firstInningsScore || null)
+        setBallsFaced(data.ballsFaced || 0)
+        setBoundaries(data.boundaries || 0)
+        setSixes(data.sixes || 0)
+        setDotBalls(data.dotBalls || 0)
+      }
+    } catch (error) {
+      console.error('Failed to load match data:', error)
+    }
+  }
+
+  useEffect(() => {
+    loadFromIndexedDB()
+  }, [])
+
+  useEffect(() => {
+    saveToIndexedDB()
+  }, [runs, wickets, balls, ballByBall, history, innings, target])
 
   return {
     teamA, setTeamA,
@@ -162,7 +208,7 @@ export const useMatch = () => {
     currentTeam,
     runs, wickets, balls,
     totalOvers, setTotalOvers,
-    target, commentary, history,
+    target, setTarget, commentary, history,
     innings, firstInningsScore,
     ballsFaced, boundaries, sixes, dotBalls,
     ballByBall,
