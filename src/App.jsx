@@ -1,4 +1,5 @@
 import { useMatch } from './hooks/useMatch'
+import { useEffect } from 'react'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
 import ScoreDisplay from './components/scoreboard/ScoreDisplay'
@@ -9,6 +10,10 @@ import MatchStatistics from './components/scoreboard/MatchStatistics'
 
 function App() {
   const matchData = useMatch()
+
+  useEffect(() => {
+    document.title = `🏏 ${matchData.runs}/${matchData.wickets} (${matchData.getOvers()}) - Cricket Scoreboard`
+  }, [matchData.runs, matchData.wickets, matchData.balls])
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
