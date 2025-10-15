@@ -1,4 +1,5 @@
 import { useMatch } from './hooks/useMatch'
+import { useKeyboard } from './hooks/useKeyboard'
 import { useEffect } from 'react'
 import Navbar from './components/layout/Navbar'
 import Footer from './components/layout/Footer'
@@ -10,6 +11,7 @@ import MatchStatistics from './components/scoreboard/MatchStatistics'
 
 function App() {
   const matchData = useMatch()
+  useKeyboard(matchData)
 
   useEffect(() => {
     document.title = `🏏 ${matchData.runs}/${matchData.wickets} (${matchData.getOvers()}) - Cricket Scoreboard`
