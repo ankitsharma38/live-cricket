@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { saveMatchData, loadMatchData, clearMatchData } from '../utils/indexedDB'
+import { idbSet, idbGet, idbDelete } from '../utils/indexedDB'
 
 export const useMatch = () => {
   const [teamA, setTeamA] = useState('Team A')
@@ -155,52 +155,58 @@ export const useMatch = () => {
     setFirstInningsScore(null)
     setCurrentTeam('A')
     setBallByBall([])
-    await clearMatchData()
+    localStorage.removeItem('cricketScoreboard')
   }
 
-  const saveToIndexedDB = async () => {
-    const matchState = {
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Load state on mount
+  useEffect(() => {
+    const loadData = () => {
+      try {
+        const saved = localStorage.getItem('cricketScoreboard')
+        if (saved) {
+          const data = JSON.parse(saved)
+          console.log('Loading saved data:', data)
+          setTeamA(data.teamA || 'Team A')
+          setTeamB(data.teamB || 'Team B')
+          setCurrentTeam(data.currentTeam || 'A')
+          setRuns(data.runs || 0)
+          setWickets(data.wickets || 0)
+          setBalls(data.balls || 0)
+          setTotalOvers(data.totalOvers || 20)
+          setTarget(data.target || null)
+          setCommentary(data.commentary || [])
+          setBallByBall(data.ballByBall || [])
+          setHistory(data.history || [])
+          setInnings(data.innings || 1)
+          setFirstInningsScore(data.firstInningsScore || null)
+          setBallsFaced(data.ballsFaced || 0)
+          setBoundaries(data.boundaries || 0)
+          setSixes(data.sixes || 0)
+          setDotBalls(data.dotBalls || 0)
+        }
+        setIsLoaded(true)
+      } catch (e) {
+        console.error('Error loading data:', e)
+        setIsLoaded(true)
+      }
+    }
+    loadData()
+  }, [])
+
+  // Save state whenever it changes (but only after initial load)
+  useEffect(() => {
+    if (!isLoaded) return
+    
+    const state = {
       teamA, teamB, currentTeam, runs, wickets, balls, totalOvers,
       target, commentary, ballByBall, history, innings, firstInningsScore,
       ballsFaced, boundaries, sixes, dotBalls
     }
-    await saveMatchData(matchState)
-  }
-
-  const loadFromIndexedDB = async () => {
-    try {
-      const data = await loadMatchData()
-      if (data) {
-        setTeamA(data.teamA || 'Team A')
-        setTeamB(data.teamB || 'Team B')
-        setCurrentTeam(data.currentTeam || 'A')
-        setRuns(data.runs || 0)
-        setWickets(data.wickets || 0)
-        setBalls(data.balls || 0)
-        setTotalOvers(data.totalOvers || 20)
-        setTarget(data.target || null)
-        setCommentary(data.commentary || [])
-        setBallByBall(data.ballByBall || [])
-        setHistory(data.history || [])
-        setInnings(data.innings || 1)
-        setFirstInningsScore(data.firstInningsScore || null)
-        setBallsFaced(data.ballsFaced || 0)
-        setBoundaries(data.boundaries || 0)
-        setSixes(data.sixes || 0)
-        setDotBalls(data.dotBalls || 0)
-      }
-    } catch (error) {
-      console.error('Failed to load match data:', error)
-    }
-  }
-
-  useEffect(() => {
-    loadFromIndexedDB()
-  }, [])
-
-  useEffect(() => {
-    saveToIndexedDB()
-  }, [runs, wickets, balls, ballByBall, history, innings, target])
+    localStorage.setItem('cricketScoreboard', JSON.stringify(state))
+    console.log('Saving data:', state)
+  }, [isLoaded, runs, wickets, balls, ballByBall, target, innings, teamA, teamB, currentTeam, totalOvers, commentary, history, firstInningsScore, ballsFaced, boundaries, sixes, dotBalls])
 
   return {
     teamA, setTeamA,

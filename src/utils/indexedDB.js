@@ -1,45 +1,54 @@
-const DB_NAME = 'CricketScoreboard'
+// Lightweight IndexedDB helpers for app state persistence
+const DB_NAME = 'woyce-cricket-db'
 const DB_VERSION = 1
-const STORE_NAME = 'matchData'
+const STORE_NAME = 'app_state'
 
-export const initDB = () => {
+function openDb() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION)
-    
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
-    
     request.onupgradeneeded = (event) => {
       const db = event.target.result
       if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id' })
+        db.createObjectStore(STORE_NAME)
       }
     }
-  })
-}
-
-export const saveMatchData = async (data) => {
-  const db = await initDB()
-  const transaction = db.transaction([STORE_NAME], 'readwrite')
-  const store = transaction.objectStore(STORE_NAME)
-  await store.put({ id: 'currentMatch', ...data })
-}
-
-export const loadMatchData = async () => {
-  const db = await initDB()
-  const transaction = db.transaction([STORE_NAME], 'readonly')
-  const store = transaction.objectStore(STORE_NAME)
-  const request = store.get('currentMatch')
-  
-  return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(request.error)
   })
 }
 
-export const clearMatchData = async () => {
-  const db = await initDB()
-  const transaction = db.transaction([STORE_NAME], 'readwrite')
-  const store = transaction.objectStore(STORE_NAME)
-  await store.delete('currentMatch')
+export async function idbSet(key, value) {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    const req = store.put(value, key)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+    tx.oncomplete = () => db.close()
+  })
+}
+
+export async function idbGet(key) {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readonly')
+    const store = tx.objectStore(STORE_NAME)
+    const req = store.get(key)
+    req.onsuccess = () => resolve(req.result)
+    req.onerror = () => reject(req.error)
+    tx.oncomplete = () => db.close()
+  })
+}
+
+export async function idbDelete(key) {
+  const db = await openDb()
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite')
+    const store = tx.objectStore(STORE_NAME)
+    const req = store.delete(key)
+    req.onsuccess = () => resolve()
+    req.onerror = () => reject(req.error)
+    tx.oncomplete = () => db.close()
+  })
 }
