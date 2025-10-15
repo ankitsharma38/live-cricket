@@ -41,8 +41,8 @@ A modern, responsive cricket scoreboard built with React and Tailwind CSS. Featu
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd woyce-task
+   git clone https://github.com/ankitsharma38/live-cricket
+   cd live-cricket
    ```
 
 2. **Install dependencies**
