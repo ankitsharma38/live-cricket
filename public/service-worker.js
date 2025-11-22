@@ -1,22 +1,20 @@
-const CACHE_NAME = "live-cricket-cache-v2";
+const CACHE_NAME = "live-cricket-cache-v3";
+const OFFLINE_URL = "/index.html";
 
-const APP_SHELL = [
-  "/",
-  "/index.html",
-  "/manifest.json",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
-];
-
-// Install phase
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll([
+        OFFLINE_URL,
+        "/manifest.json",
+        "/icons/icon-192.png",
+        "/icons/icon-512.png",
+      ]);
+    })
   );
   self.skipWaiting();
 });
 
-// Activate phase
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -26,25 +24,30 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Fetch phase
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
+  // Only handle GET requests
+  if (request.method !== "GET") return;
+
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) return cachedResponse;
 
       return fetch(request)
-        .then((response) => {
-          // Cache all local requests (JS, CSS, images, fonts, etc)
+        .then((networkResponse) => {
+          // Cache anything from our domain (JS, CSS, assets, icons)
           if (request.url.startsWith(self.location.origin)) {
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(request, response.clone());
+              cache.put(request, networkResponse.clone());
             });
           }
-          return response;
+          return networkResponse;
         })
-        .catch(() => caches.match("/index.html"));
+        .catch(() => {
+          // When offline, always fallback to index.html for SPA
+          return caches.match(OFFLINE_URL);
+        });
     })
   );
 });
